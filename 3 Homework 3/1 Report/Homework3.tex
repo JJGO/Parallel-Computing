@@ -1,0 +1,140 @@
+\documentclass[a4paper]{article}
+\input{plantilla.tex}
+
+% Global variables
+\newcommand{\tu}           {\underline}
+\newcommand{\HWTitle}           {Homework 3}
+\newcommand{\HWSubtitle}        {}
+\newcommand{\HWDueDate}         {\today}
+\newcommand{\HWClass}           {EECS 587 Parallel Computing}
+\newcommand{\HWAuthorName}     {José Javier González Ortiz}
+
+\title{\HWTitle \\ \vspace{.25cm} \large\HWSubtitle}
+\author{\HWAuthorName}
+\date{\HWDueDate}
+
+\setlength{\parskip}{.5em}
+
+\renewcommand\algorithmiccomment[1]{%
+  \hfill\ \eqparbox{COMMENT}{#1}%
+}
+
+% \DeclarePairedDelimiter\par{\left(}{\right)}
+
+\newcommand\LONGCOMMENT[1]{%
+  \hfill\ \begin{minipage}[t]{\eqboxwidth{COMMENT}}#1\strut\end{minipage}%
+}
+
+\begin{document}
+\maketitle
+\thispagestyle{fancy}
+
+\section{Algorithm}
+    Given the problem in the assignment we can show that although the initial matrix is symmetrical, after the first iteration we will lose the symmetry so we have to calculate all the values in the matrix.
+
+    Given more processors we can split the work to be done. Since we want the divisions to be as cohesive as possible to minimize the communication, we can opt for two ways to do the domain decomposition. Both involve \emph{Halo Swapping} as it renders the most effective strategy in this case since every element depends on the ones above, below and to the right.
+
+    First the serial time for this algorithm will be SerTime $ = \Theta(n^2)$ since we will do a constant amount of iterations during which it will update the $n^2$ elements of the matrix. Now, an ideal parallel algorithm without communication we would get ParTime $ = \Theta(n^2 / p)$, however any real algorithm will have to communicate so the SpeedUp won't be $p$.
+
+    If we do the division per processors in one dimension, the Parallel time will be as follows: ParTime $= \Theta(n^2/p) + \Theta(n/p) + \Theta(n) = \Theta(n^2/p) + \Theta(n) $. However, if we do the partition in both dimensions (we are allowed to do it since $p$ is given to be a perfect square) the parallel time will be ParTime $= \Theta(n^2/p) + \Theta(n/\sqrt{p})$ which is clearly better than the naive approach shown before.
+
+    % It can be shown that given an fixed rectangular area $S$ of sides $l$ and $S/l$ the minimum perimeter happens when $l = S/l = \sqrt{S}$. In this problem the
+
+\section{Analysis}
+    The chosen domain decomposition renders the processor communication in a 2D grid. To better the communication involved there should be communication between the first row of processors and the last row, to make use of the modular properties of the algorithm. Therefore, the sought topology is cylindrical.
+
+    Given the partition shown we will have for each processor $p$ with coordinates in the processor grid $(x,y)$. The size of the matrix will be $h \times w$ where $h$ and $w$ are:
+    \begin{align}
+    h = \begin{cases}
+    \ceil{\frac{n}{\sqrt{p}}} \quad & \text{if  } x < \sqrt{p}-1\\
+    n \mod \ceil{\frac{n}{\sqrt{p}}} \quad & \text{if  } x = \sqrt{p}-1\\
+    \end{cases}\\
+    w = \begin{cases}
+    \ceil{\frac{n}{\sqrt{p}}} \quad & \text{if  } y < \sqrt{p}-1\\
+    n \mod \ceil{\frac{n}{\sqrt{p}}} \quad & \text{if  } y = \sqrt{p}-1\\
+    \end{cases}
+    \end{align}
+
+    Apart from this $h \times w$ matrix, each processor will have to store three halos corresponding to the following values
+    \begin{itemize}
+        \item \textbf{Upper Halo} of size $1 \times w$, corresponding to the lower row of the processor above (note that $(\sqrt{p}-1,y)$) is above $(0,y)$ in a cylindrical topology). This values are needed when $i_{\text{local}} = 0$ and $i''$ looks for the value above.
+        \item \textbf{Lower Halo} of size $1 \times w$, corresponding to the upper row of the processor below. This values will be needed hen $i_{\text{local}} = \ceil{\frac{n}{\sqrt{p}}} -1$ and $i'$ looks for the value below.
+        \item \textbf{Right Halo} of size $h \times 1$, corresponding to the leftmost column of the processor to the right. This values will be needed when $j_{\text{local}} = \ceil{\frac{n}{\sqrt{p}}} -1$ and $j'$ will ask for the value to the right. The processors with coordinates $(x, \sqrt{p}-1)$ will not use this halos since the values of the matrix with coordinates $(i,n-1)$ do not update.
+    \end{itemize}
+    The communication will be composed of three shifts.
+    \begin{enumerate}
+        \item \textbf{Upward Modular Shift} Each processor $(x,y)$ sends its upper row to the processor above $(x -1 \mod \sqrt{p},y)$ and receives from the one below $(x +1 \mod \sqrt{p},y)$ storing the values in the Lower Halo. Since this is a cylindrical topology this operation involves all the processors sending and receiving at the same time.
+        \item \textbf{Downward Modular Shift} Similarly, this is the reverse operation. Each processor $(x,y)$ sends its lower row to the processor below $(x +1 \mod \sqrt{p},y)$ and receives from the one above $(x -1 \mod \sqrt{p},y)$ storing the values in the Upper Halo.
+        \item \textbf{Leftward Shift} This involves every processor $(x,y)$ sending its leftmost column to the one on their left $(x,y-1)$ side and receiving from the one on their right $(x,y+1)$ and storing th values in their Right Halo. Note than this an open loop and the processors $(x,0)$ won't send any information and the processors $(x,\sqrt{p}-1)$ won't receive any information either.
+    \end{enumerate}
+
+    From this we can gather that the communication time is $O(\max(h,w))$ since we are swapping three halos per processor every time the processors communicate. Since $\max(h,w) = \ceil{\frac{n}{\sqrt{p}}}$ the time involved in the communication will be $O(\frac{n}{\sqrt{p}})$.
+
+    Since the update involved modifying the whole matrix it will take time $O(h\times w)$ per processor. Since $h,w <= \ceil{\frac{n}{\sqrt{p}}}$ we can express it as $O(h\times w) = O(n^2/p)$.
+
+    Finally the whole parallel time will be
+    \begin{equation}
+        \text{ParTime} = \Theta(n^2/p) + \Theta(n/\sqrt{p})\\
+    \end{equation}
+
+    The SpeedUp will be
+    \begin{equation}
+        \text{SpeedUp} = \frac{\text{SerTime}}{\text{ParTime}} = \frac{\Theta(n^2)}{\Theta(n^2/p) + \Theta(n/\sqrt{p})}
+    \end{equation}
+    \begin{equation}
+        \text{SpeedUp} \rightarrow p \qquad\text{as}\qquad n \rightarrow \infty
+    \end{equation}
+
+    And the efficiency:
+    \begin{equation}
+        \text{Efficiency}  = \frac{\text{SerTime}}{p \cdot \text{ParTime}} = \frac{\Theta(n^2)}{\Theta(n^2) + \Theta(n\sqrt{p})}
+    \end{equation}
+    \begin{equation}
+        \text{Efficiency} \rightarrow 1 \qquad\text{for}\qquad p = O(n^2)
+    \end{equation}
+\newpage
+\section{Implementation}
+    To implement the algorithm we have used the partition described above and used a cylindrical virtual topology where the row processors are wrapped around but the column processors are not. Furthermore it has been used \texttt{MPI\_SENDRECV} for the communication, using a derived datatype for the column communication.
+
+    The particular aspects of the whole implementation can be seen in Code \ref{cod:matrix}
+
+\section{Results}
+    The results from the timings are shown in the Table \ref{tab:Results}. The Verification values for the different matrix sizes are shown in the Table \ref{tab:Verification}.
+
+    \begin{table}[!htp]
+      \center
+      \begin{tabular}{*{5}{r}}
+        \textbf{n} &  \textbf{p} &   \textbf{average} &       \textbf{min} &       \textbf{max} \\
+    \midrule
+     1000 & 1 & 5.71552 & 5.34630 & 5.83059\\
+     2000 & 1 & 22.82041 & 21.18143 & 23.31813\\
+     1000 & 4 & 1.46049 & 1.41766 & 1.49389\\
+     2000 & 4 & 6.04183 & 5.67908 & 7.35377\\
+     1000 & 16 & 0.46770 & 0.38920 & 0.54539\\
+     2000 & 16 & 1.77513 & 1.50135 & 2.04136\\
+     1000 & 36 & 0.30457 & 0.22946 & 0.37673\\
+     2000 & 36 & 1.01406 & 0.68300 & 1.30123\\
+      \end{tabular}
+      \caption{Results in seconds}
+      \label{tab:Results}
+    \end{table}
+        
+    \begin{table}[!htp]
+      \center
+      \begin{tabular}{*{3}{r}}
+        \textbf{n} &   \textbf{sum} &       \textbf{min}\\
+    \midrule
+     1000 &  4283810.871966  & -892.718330   \\
+     2000 & 17631642.148465  & -1800.724437  \\
+      \end{tabular}
+      \caption{Verification Values}
+      \label{tab:Verification}
+    \end{table}
+
+
+\newpage
+\appendix
+\section{Code}
+    \lstinputlisting[caption = C++ code for the matrix algorithm, label = cod:matrix]{../Homework3/matrix.cpp}
+
+\end{document}

@@ -1,0 +1,191 @@
+\documentclass[a4paper]{article}
+\input{plantilla.tex}
+
+% Global variables
+\newcommand{\tu}           {\underline}
+\newcommand{\HWTitle}           {Homework 2}
+\newcommand{\HWSubtitle}        {}
+\newcommand{\HWDueDate}         {\today}
+\newcommand{\HWClass}           {EECS 587 Parallel Computing}
+\newcommand{\HWAuthorName}     {José Javier González Ortiz}
+
+\title{\HWTitle \\ \vspace{.25cm} \large\HWSubtitle}
+\author{\HWAuthorName}
+\date{\HWDueDate}
+
+\setlength{\parskip}{.5em}
+
+\renewcommand\algorithmiccomment[1]{%
+  \hfill\ \eqparbox{COMMENT}{#1}%
+}
+
+% \DeclarePairedDelimiter\par{\left(}{\right)}
+
+\newcommand\LONGCOMMENT[1]{%
+  \hfill\ \begin{minipage}[t]{\eqboxwidth{COMMENT}}#1\strut\end{minipage}%
+}
+
+\begin{document}
+\maketitle
+\thispagestyle{fancy}
+
+\section{Efficiency Analysis}
+
+    Given the Serial program we can analyze its Big-O notation. From the given information about initialize, statement 3, statement 5 and finalize we can calculate the serial time as follows:
+    \begin{equation}
+        \text{SerTime}(n) = \Theta(n) + n\cdot(\Theta(1) + n\Theta(1)) + \Theta(1) = \Theta(n^2)
+    \end{equation}
+
+    Since we can perfectly parallelize the inner loop the Parallel time without any communication will be:
+
+    \begin{equation}
+        \text{ParTime}(n,p) = \Theta(n) + n\cdot \left(\Theta(1) + \frac{n}{p}\Theta(1) \right) + \Theta(1) = \Theta \left(\frac{n^2}{p}\right) + \Theta(n)
+    \end{equation}
+
+    We cannot discard the $\Theta(n)$ term since for $p = \Theta(n)$ will as important as the first term. Introducing communication into the algorithm yields the following efficiencies:
+
+    \begin{enumerate}[a)]
+        \item Introducing a $\Theta(1)$ communication in the inner loop produces no changes in the big O representation of the Parallel Time
+        
+        \begin{equation}
+            \text{ParTime}(n,p) = \Theta(n) + n\cdot \left(\Theta(1) + \frac{n}{p}\Theta(1) \right) + \Theta(1) = \Theta \left(\frac{n^2}{p}\right) + \Theta(n)
+        \end{equation}
+
+        The efficiency will be:
+
+        \begin{equation}
+            \text{Efficiency}(n,p) = \frac{\Theta(n^2)}{p \left( \Theta \left(\frac{n^2}{p}\right) + \Theta(n) \right)} = \frac{\Theta(n^2)}{\Theta(n^2)+  \Theta(n p)}
+        \end{equation}
+
+        This will only be constant as long as $ np = O(n^2)$, namely if $p = O(n)$. If $p = \omega(n)$ the efficiency will drop to zero, however we know by definition that $p \leq n$ since there cannot be more processors than iterations of the inner loop.
+
+        \item Introducing a $\Theta(p)$ time in the outer loop the Parallel time will be:
+
+        \begin{equation}
+            \text{ParTime}(n,p) = \Theta(n) + n\cdot \left(\Theta(1) + \frac{n}{p}\Theta(1) + \Theta(p) \right) + \Theta(1) = \Theta \left(\frac{n^2}{p}\right) + \Theta(n p)
+        \end{equation}
+
+        With this expression the efficiency is:
+
+        \begin{equation}
+            \text{Efficiency}(n,p) = \frac{\Theta(n^2)}{p \left(\Theta \left(\frac{n^2}{p}\right) + \Theta(n p) \right)} = \frac{\Theta(n^2)}{\Theta(n^2)+  \Theta(n p^2)}
+        \end{equation}
+
+        As before, this ratio will tend to a constant given that $n p^2 = O(n^2)$. Simplifying the expression we get $p = O(\sqrt{n})$. For $p = \omega(\sqrt{n})$ the efficiency will go to zero.
+
+        \item  Introducing a $\Theta(\sqrt{n/p})$ time in the outer loop the Parallel time will be:
+
+        \begin{equation}
+            \text{ParTime}(n,p) = \Theta(n) + n\cdot \left(\Theta(1) + \frac{n}{p}\Theta(1) + \Theta \left(\sqrt{\frac{n}{p}}\right) \right) + \Theta(1) = \Theta \left(\frac{n^2}{p}\right) + \Theta(n) + \Theta \left(n \sqrt{\frac{n}{p}}\right)
+        \end{equation}
+
+        The efficiency in this case follows a somewhat more complicate expression
+
+        \begin{equation}
+            \text{Efficiency}(n,p) = \frac{\Theta(n^2)}{p \left(\Theta \left(\frac{n^2}{p}\right) + \Theta(n) + \Theta \left(n \sqrt{\frac{n}{p}}\right) \right)} = \frac{\Theta(n^2)}{\Theta(n^2)+  \Theta(n p) + \Theta(\sqrt{n^3 p})}
+        \end{equation}
+
+        To get a better idea of the asymptotic behavior we can divide by $\Theta(n^2)$ and get
+
+        \begin{equation}
+            \text{Efficiency}(n,p) = \frac{\Theta(1)}{\Theta(1)+  \Theta \left(\dfrac{p}{n}\right) + \Theta \left(\sqrt{\dfrac{p}{n}}\right)}
+        \end{equation}
+
+        From this we have to satisfy both:
+        \begin{equation}
+           \dfrac{p}{n} = \Theta(1)  \qquad
+           \sqrt{\dfrac{p}{n}} = \Theta(1)
+        \end{equation}
+
+        Which will only happen if $p = O(n)$. Then the efficiency will tend to a constant. As we said before $p \leq n$ so this will always be satisfied
+
+    \end{enumerate}
+
+\section{Reduce Sum}
+    \begin{enumerate}[a)]
+    \item We want to minimize the communication in order to improve the efficiency, so the best approach will be summing the $n/p$ values in each processor and then adding these intermediate sums. Since they are arranged in a 1-dimensional mesh the running time of the communication is $\Theta(p)$. The procedure would be something similar to the one described in Algorithm \ref{alg:RS}.
+    \begin{algorithm}
+        \caption{1D reduce(sum,A)}\label{alg:RS}
+        \begin{algorithmic}[1]
+            \Require{Each processor has the common values \emph{p} and \emph{n}, as well as the local value \emph{id}}
+            \Statex
+            \Procedure{Reduce(sum,A)}{}
+                \State $s \gets sum[ A(id \cdot n/p:(id+1) \cdot n/p) $]
+                \If{$id > 0$}
+                    \State \emph{receive}($id-1$,$t$)
+                    \State $s \gets s + t$
+                \EndIf
+                \If{$id < p-1$}
+                    \State \emph{send}($id+1$,$s$)
+                \EndIf
+                \State \Return $s$
+            \EndProcedure
+        \end{algorithmic}
+    \end{algorithm}
+
+    \item As we can see from the previous question the algorithm will take $\Theta(n/p) + \Theta(p)$ where $1 \leq p\leq n$. It is easy to see that for both $p = \Theta(1)$ and $p = \Theta(n)$ the running time is $\Theta(n)$. We want to minimize so by making the terms being equal we will minimize the running time.
+    \begin{equation}
+        \Theta \left( \frac{n}{p} \right) = \Theta(p) \rightarrow p = \Theta(\sqrt{n})
+    \end{equation}
+
+    Therefore the best running time will happen when $p = \Theta(\sqrt{n})$ and will be $\text{ParTime} = \Theta(\sqrt{n})$
+
+    
+    \item In a fully connected computer, given a binary operator the best communication will be $\Theta(\log p)$. In this case the running time is going to be $\Theta(n/p) + \Theta(\log p)$.
+
+    Since due to the communication constraint we know that there is a $\Omega(\log n)$ lower bound we can see that we cannot do better than getting rid of the linear term. This happens for $p = \Theta(n)$ which minimizes the time to $\text{ParTime} = \Theta(\log n)$
+    
+    \end{enumerate}
+
+\section{SIMD Hypercube}
+    \subsection{Analysis}
+        As a first step is good to think about which is the minimum ideal runtime given the communication constraints of an hypercube. Let $p_M$ be the processor with the maximum value $v_M \in V : v_M \geq v_i \quad\forall v_i \in V$. There will exist a processor $\overline{p_M}$ such that the minimum distance from $p_M$ measured in edges will be $\log p$. To reason this, just think about this maximum point as a vertex in the hypercube and the processor $\overline{p_M}$ as the opposite vertex, since the hypercube has $\log p$ dimensions there is no shortest path between them. Furthermore, the coordinates $\overline{p_M}$ will be the bitwise complement of the coordinates of $\overline{p_M}$.
+
+        Thus the algorithm will only be correct if $v_{\overline{p_M}} = v_M$ which will need at least $\Omega(\log p)$ communications. We have found a logarithmic lower bound in our running time. An efficient algorithm that solves the problem can be thought in the following manner:\\\,\\
+        \centerline{
+        {   In each timestep $i$ , each processor exchanges its value with its neighbor \phantom{a} }}\\\centerline{{ in the $i^{th}$ dimension and stores as its new value the maximum of the two.\phantom{}}}\\
+        \centerline{ {After $\log p$ steps all the processors have the maximum value in the array.}
+        }
+
+        This algorithm is described in the Algorithm \ref{alg:SIMD}.
+
+    \subsection{Algorithm}
+
+        \begin{algorithm}
+            \caption{SIMD Hypercube AllReduce(max)}\label{alg:SIMD}
+            \begin{algorithmic}[1]
+                \Require{Each processor has the common value $p$} and the local values \emph{pid} and $V$, as well as the variablew $M$ and $R$
+                \Statex{\hspace{2.8em} The controller has the variables $dim$ and $x$ }
+                \Statex
+                \Procedure{AllReduce}{$\max,V(0:p-1)$}
+                    \State $M \gets V$ \Comment{This instruction is transmitted and executed in the processors}
+                    \State $x \gets \lg p$\Comment{This instruction is executed in the Controller}
+                    \For{$dim = 0$ \textbf{to} $x-1$}\Comment{This instruction is executed in the Controller}
+                        \State \emph{exchange}($dim,M,R$) \Comment{This instruction is transmitted and executed in the processors}
+                        \If{$R > M$} \Comment{This instruction is transmitted and executed in the processors}
+                            \State $M\gets R$ \Comment{This instruction is transmitted and executed in the processors}
+                        \EndIf
+                    \EndFor
+                    \State \Return $M$ \Comment{This instruction is transmitted and executed in the processors}
+                \EndProcedure
+            \end{algorithmic}
+        \end{algorithm}
+\newpage
+    \subsection{Correctness}
+        For correctness first we state that given any processor $p$ it has only one neighbor in the dimension $dim$, namely $p \oplus 2^{dim}$.
+        At each time step the number of different values in the array is at least halved because the processors are saving the maximum value and each processor is \emph{exchanging} the value with only one other processor. After $\log p$ steps we will have gone through all the dimensions and all the processors will have the maximum value $v_M$.
+
+        Namely, let the $p_M$ be the processor with the maximum value $v_M \in V : v_M \geq v_i \quad\forall v_i \in V$, and be the bit representation of its \emph{pid} $b_{x-1}b_{x-2}\ldots b_2 b_1 b_0$. After each time step $dim$ the processors with \emph{pids} of the form shown in Equation \ref{eq:bit} have the maximum value because they have received it in any of the previous iterations. After $x = \log p$ steps all the processors will be within this set.
+        \begin{equation}
+            b_{x-1}b_{x-2}\ldots b_{dim+2} b_{dim+1} \underbrace{X \ldots X X}_{\text{$dim+1$ times}}.
+            \label{eq:bit}
+        \end{equation}
+
+        We can also prove that given any processor $p$ there exists a chain of \emph{exchanges} less than $\log p$ that goes from $p_M$ to $p$.
+            
+    \subsection{Running Time}
+        Finally, to calculate the running time we have to take into account that both the \emph{exchange} statement and the \emph{if} statement are $\Theta(1)$ because we are sending before receiving. Since there are $\log p$ steps the total running time will be $\Theta(\log p)$ which is the best we can do since there is a logarithmic lower bound as we saw due to the communication constraints.
+
+
+
+\end{document}

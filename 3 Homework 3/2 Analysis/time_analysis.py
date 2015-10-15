@@ -1,4 +1,11 @@
 from matplotlib import pyplot
+# from mpltools import style
+import prettyplotlib as ppl
+# from mpltools import layout
+
+# style.use('ggplot')
+
+# figsize = layout.figaspect(scale=1.2)
 
 ps = [1,4,16,36]
 ns = [1000,2000]
@@ -49,11 +56,46 @@ ideals = {n : map(lambda x: avs[(n,ps[0])]/x,ps) for n in ns}
 
 for n in ns:
     fig = pyplot.figure()
-    pyplot.plot(ps,ideals[n], 'ro-')
-    pyplot.plot(ps,[avs[(n,p)] for p in ps], 'bo-')
-    pyplot.plot(ps,[mins[(n,p)] for p in ps], 'go-')
+    ppl.plot(ps,ideals[n], 'go-')
+    ppl.plot(ps,[avs[(n,p)] for p in ps], 'ro-')
+    ppl.plot(ps,[mins[(n,p)] for p in ps], 'bo-')
     pyplot.xlabel('Processors')
-    pyplot.ylabel('Time Log(s)')
+    pyplot.ylabel('Time (s)')
+    pyplot.title('Running Times for n = '+str(n))
+    pyplot.legend(['Ideal Case','Average Case','Best Case'])
     pyplot.yscale('log')
+    if n == 2000:
+        axes = pyplot.gca()
+        # axes.set_xlim([1,40])
+        axes.set_ylim([0.5,30])
     pyplot.savefig(str(n)+'.png')
-    pyplot.show()
+    # pyplot.show()
+
+SpeedUp = { (n,p) : mins[n,1]/mins[n,p] for p in ps for n in ns}
+Efficiency = { (n,p) : SpeedUp[(n,p)]/p for p in ps for n in ns}
+# for n in ns:
+fig = pyplot.figure()
+ppl.plot(ps,ps, 'go-')
+ppl.plot(ps,[SpeedUp[(1000,p)] for p in ps], 'ro-')
+ppl.plot(ps,[SpeedUp[(2000,p)] for p in ps], 'bo-')
+pyplot.xlabel('Processors')
+pyplot.ylabel('SpeedUp')
+pyplot.title('Comparison of SpeedUp')
+pyplot.legend(['Ideal SpeedUp','n = 1000','n = 2000'],loc=2)
+pyplot.savefig('SpeedUp.png')
+# pyplot.show()
+
+# for n in ns:
+fig = pyplot.figure()
+ppl.plot(ps,[1]*len(ps), 'go-')
+ppl.plot(ps,[Efficiency[(1000,p)] for p in ps], 'ro-')
+ppl.plot(ps,[Efficiency[(2000,p)] for p in ps], 'bo-')
+pyplot.xlabel('Processors')
+pyplot.ylabel('Efficiency')
+axes = pyplot.gca()
+axes.set_xlim([1,40])
+axes.set_ylim([0,1.1])
+pyplot.title('Comparison of Efficiencies')
+pyplot.legend(['Ideal Efficiency','n = 1000','n = 2000'],loc=3)
+pyplot.savefig('Efficiency.png')
+# pyplot.show()

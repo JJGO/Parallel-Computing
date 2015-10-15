@@ -61,7 +61,7 @@
         \item \textbf{Lower Halo} of size $1 \times w$, corresponding to the upper row of the processor below. This values will be needed hen $i_{\text{local}} = \ceil{\frac{n}{\sqrt{p}}} -1$ and $i'$ looks for the value below.
         \item \textbf{Right Halo} of size $h \times 1$, corresponding to the leftmost column of the processor to the right. This values will be needed when $j_{\text{local}} = \ceil{\frac{n}{\sqrt{p}}} -1$ and $j'$ will ask for the value to the right. The processors with coordinates $(x, \sqrt{p}-1)$ will not use this halos since the values of the matrix with coordinates $(i,n-1)$ do not update.
     \end{itemize}
-    The communication will be composed of three shifts.
+    The communication will be composed in three shifts.
     \begin{enumerate}
         \item \textbf{Upward Modular Shift} Each processor $(x,y)$ sends its upper row to the processor above $(x -1 \mod \sqrt{p},y)$ and receives from the one below $(x +1 \mod \sqrt{p},y)$ storing the values in the Lower Halo. Since this is a cylindrical topology this operation involves all the processors sending and receiving at the same time.
         \item \textbf{Downward Modular Shift} Similarly, this is the reverse operation. Each processor $(x,y)$ sends its lower row to the processor below $(x +1 \mod \sqrt{p},y)$ and receives from the one above $(x -1 \mod \sqrt{p},y)$ storing the values in the Upper Halo.
@@ -70,7 +70,7 @@
 
     From this we can gather that the communication time is $O(\max(h,w))$ since we are swapping three halos per processor every time the processors communicate. Since $\max(h,w) = \ceil{\frac{n}{\sqrt{p}}}$ the time involved in the communication will be $O(\frac{n}{\sqrt{p}})$.
 
-    Since the update involved modifying the whole matrix it will take time $O(h\times w)$ per processor. Since $h,w <= \ceil{\frac{n}{\sqrt{p}}}$ we can express it as $O(h\times w) = O(n^2/p)$.
+    Since the update involved modifying the whole matrix it will take time $O(h\times w)$ per processor. Since $h,w \leq \ceil{\frac{n}{\sqrt{p}}}$ we can express it as $O(h\times w) = O(n^2/p)$.
 
     Finally the whole parallel time will be
     \begin{equation}
@@ -83,6 +83,7 @@
     \end{equation}
     \begin{equation}
         \text{SpeedUp} \rightarrow p \qquad\text{as}\qquad n \rightarrow \infty
+        \label{eq:SpeedUp}
     \end{equation}
 
     And the efficiency:
@@ -91,6 +92,7 @@
     \end{equation}
     \begin{equation}
         \text{Efficiency} \rightarrow 1 \qquad\text{for}\qquad p = O(n^2)
+        \label{eq:Efficiency}
     \end{equation}
 \newpage
 \section{Implementation}
@@ -130,6 +132,49 @@
       \caption{Verification Values}
       \label{tab:Verification}
     \end{table}
+
+    To ease the understanding of the data we can plot different relations between the data. In figures \ref{fig:1000} and \ref{fig:2000} we can see the timing results in a log scale for $n = 1000$ and $n = 2000$. Defining $\text{SerTime}(n) = \text{ParTime}(n,1)$ and calculating the ideal parallel time as $\text{SerTime}/p$ we get some interesting results. As we can see the curves match up quite nicely, being the minimum time better than the average one, which seems logical. The deviation for greater $p$ seems larger, however we are using a log scale so in fact it is not as big of a difference. Finally, we can see that for $n = 2000$ the minimum case does better $n = 1000$.
+
+    \begin{figure}[htp!]
+      \centering
+      \begin{subfigure}{.5\textwidth}
+        \centering
+        \includegraphics[width=.99\textwidth]{../2 Analysis/1000.png}
+        \caption{$n = 1000$}
+        \label{fig:1000}
+      \end{subfigure}%
+      \begin{subfigure}{.5\textwidth}
+        \centering
+        \includegraphics[width=.99\textwidth]{../2 Analysis/2000.png}
+        \caption{$n = 2000$}
+        \label{fig:2000}
+      \end{subfigure}
+      \caption{Logarithmic plot of times for different number of processors}
+    \end{figure}
+
+    Now, to analyze both SpeedUp and Efficiency, we can see the plots shown in Figures \ref{fig:SpeedUp} and \ref{fig:Efficiency}, in which we can find the ideal case, for $n = 1000$ and for $n = 2000$. In this plots an average of the minimum cases has been used to avoid deviating the data with longer timings.
+
+    Analyzing the Figures we can see that we have achieved almost linear SpeedUp as the Equation \eqref{eq:SpeedUp} predicted. As $n$ goes from $1000$ to $2000$ the SpeedUp improves verifying our predictions. For the Efficiency, Equation \eqref{eq:Efficiency} predicted constant efficiency as $n$ grew larger. Figure \ref{fig:Efficiency} confirms this, with $n = 2000$ having a behavior much closer to ideal efficiency than $n = 1000$.
+
+    Finally, it is important to notice that MPI communication does not behave as the theoretical models and therefore the results will not match perfectly to the model. Nevertheless, we have achieved successful results in the time needed to solve the problem.
+
+
+    \begin{figure}[htp!]
+      \centering
+      \begin{subfigure}{.5\textwidth}
+        \centering
+        \includegraphics[width=.99\textwidth]{../2 Analysis/SpeedUp.png}
+        \caption{Speed-Up}
+        \label{fig:SpeedUp}
+      \end{subfigure}%
+      \begin{subfigure}{.5\textwidth}
+        \centering
+        \includegraphics[width=.99\textwidth]{../2 Analysis/Efficiency.png}
+        \caption{Efficiency}
+        \label{fig:Efficiency}
+      \end{subfigure}
+      \caption{Speed-Up and Efficiency plots for the ideal case, $n=1000$ and $n = 2000$}
+    \end{figure}
 
 
 \newpage

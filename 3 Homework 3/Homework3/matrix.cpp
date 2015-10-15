@@ -31,8 +31,6 @@ int main(int argc, char  *argv[])
     int n, m, p, sqrt_p, height, width;
     int rank, coords[2];
 
-    // int output = 0;
-
     MPI_Comm matrix_comm;
     static int dims [2];
     int periods [2] = { 1, 0 };
@@ -140,7 +138,6 @@ int main(int argc, char  *argv[])
     MPI_Finalize();
 
     return 0;
-
 }
 
 double** new_matrix(int height, int width)
@@ -158,7 +155,6 @@ void delete_matrix(double** matrix)
     delete[] matrix[0];
     delete[] matrix;
 }
-
 
 void initialize_matrix(double** A, int size, int height, int width, int* coords)
 {

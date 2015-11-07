@@ -1,4 +1,4 @@
-C = 13
+C = 11
 coords = [ ( 1.1*(i**2 %17) , 0.5*(i**3 %23) ) for i in range(C)]
 
 distance = {}

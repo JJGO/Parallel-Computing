@@ -2,14 +2,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 // #include <iostream>
-#include <cmath>
 #include <time.h>
 #include <limits>
+#include <cmath>
 #include <vector>
 #include <stack>
 #include <queue>
 
-#define C 14
+#define C 15
 
 // using namespace std;
 
@@ -111,6 +111,12 @@ int main(int argc, char const *argv[])
     time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
     print_matrix(distances);
     print_path(best_path);
+    double check_cost = 0.0;
+    for(int i = 0 ; i < C-1 ; i++)
+    {
+        check_cost += distances[best_path.order[i]][best_path.order[i+1]];
+    }
+    printf("%lf\n",check_cost );
     printf("\nTIME : %lf seconds\n", time_spent);
 
     return 0;
@@ -122,8 +128,10 @@ void initialize_coordinates(Point coordinates[C])
 {
     for (int c = 0; c < C; c++)
     {
-        coordinates[c].x = 1.1*(c*c % 17);
-        coordinates[c].y = 0.5*(c*c*c % 23);
+        // coordinates[c].x = 1.1*(c*c % 17);
+        // coordinates[c].y = 0.5*(c*c*c % 23);
+        coordinates[c].x = 100.0*sin(c);
+        coordinates[c].y = 101.0*cos(c*c);
     }
 }
 
@@ -138,8 +146,8 @@ void calculate_distances(Point coordinates[C], double distances[C][C])
         distances[i][i] = 0.0;
         for(j = 0; j < i; j++)
         {
-            deltaX = pow(abs(iX-coordinates[j].x),1.5);
-            deltaY = pow(abs(iY-coordinates[j].y),1.5);
+            deltaX = pow(fabs(iX-coordinates[j].x),1.5);
+            deltaY = pow(fabs(iY-coordinates[j].y),1.5);
             dist = pow(deltaX+deltaY,2.0/3.0);
             distances[i][j] = dist;
             distances[j][i] = dist;

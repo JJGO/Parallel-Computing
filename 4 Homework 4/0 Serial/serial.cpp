@@ -62,9 +62,7 @@ int main(int argc, char const *argv[])
     origin.cost = 0.0;
     origin.order.push_back(0);
     for(int i = 0; i < C; i++)
-    {
         origin.visited[i] = false;
-    }
 
     clock_t begin, end;
     double time_spent;
@@ -97,9 +95,9 @@ int main(int argc, char const *argv[])
                     else
                     {
                         best_path = new_path;
+                        // print_path(new_path);
                     }
                 }
-                // print_path(new_path);
             }
         }
     }
@@ -128,8 +126,6 @@ void initialize_coordinates(Point coordinates[C])
 {
     for (int c = 0; c < C; c++)
     {
-        // coordinates[c].x = 1.1*(c*c % 17);
-        // coordinates[c].y = 0.5*(c*c*c % 23);
         coordinates[c].x = 100.0*sin(c);
         coordinates[c].y = 101.0*cos(c*c);
     }

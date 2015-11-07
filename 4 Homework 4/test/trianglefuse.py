@@ -1,7 +1,9 @@
 import numpy as np
-C = 11
+from math import sin,cos
+C = 15
 distance = np.zeros(shape=(C,C))
-coords = [ ( 1.1*(i**2 %17) , 0.5*(i**3 %23) ) for i in range(C)]
+# coords = [ ( 1.1*(i**2 %17) , 0.5*(i**3 %23) ) for i in range(C)]
+coords = [ ( 100.0*sin(i) , 101.0*cos(i*i) ) for i in range(C)]
 for z in range(C*(C+1)/2):
 	i,j = z/C, z%C
 	if i == j:
@@ -19,3 +21,4 @@ for i in range(C):
 		print "{0:0.2f}".format(distance[(i,j)]).zfill(5),
 	print
 	
+print sum(sum(distance))

@@ -1,5 +1,6 @@
+from math import sin,cos
 C = 11
-coords = [ ( 1.1*(i**2 %17) , 0.5*(i**3 %23) ) for i in range(C)]
+coords = [ ( 100.0*sin(i) , 101.0*cos(i*i) ) for i in range(C)]
 
 distance = {}
 for i in range(C):
@@ -31,7 +32,7 @@ print
 
 for i in range(C):
 	for j in range(C):
-		print "{0:0.2f}".format(distance[(i,j)]).zfill(5),
+		print "{0:0.2f}".format(distance[(i,j)]).zfill(6),
 	print
 
 print bound
@@ -40,3 +41,4 @@ total = 0.0
 for i in range(len(best)-1):
 	total += distance[(best[i],best[i+1])]
 print total
+print sum(distance.values())

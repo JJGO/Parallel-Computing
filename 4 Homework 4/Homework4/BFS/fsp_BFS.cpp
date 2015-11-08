@@ -1,16 +1,16 @@
-
 #include <stdio.h>
 #include <stdlib.h>
 // #include <iostream>
-#include <time.h>
 #include <cmath>
 #include <limits>
 #include <vector>
 #include <stack>
 #include <queue>
 #include <omp.h>
+#include <ctime>
+#include <string>
 
-#define C 13
+#define C 15
 
 struct Point {
     double x;
@@ -30,7 +30,9 @@ void calculate_distances(Point coordinates[C], double distances[C][C]);
 
 void print_matrix(double A[C][C]);
 void print_path(Path path);
+void fprint_path(FILE *f,Path path);
 
+char* gettime(char *buffer);
 
 int main(int argc, char const *argv[])
 {
@@ -43,9 +45,9 @@ int main(int argc, char const *argv[])
     long busy_workers;
     int num_threads;
 
-    int* best_changes = new int[num_threads]; //DEBUG
-    int* paths_explored = new int[num_threads]; //DEBUG
-    int* pushes = new int[num_threads]; //DEBUG
+    int* best_changes; // DEBUG
+    int* paths_explored; // DEBUG
+    int* pushes; // DEBUG
 
     #pragma omp parallel shared(best_path, global_unexplored_paths,coordinates,distances,busy_workers,num_threads)
     {
@@ -54,10 +56,12 @@ int main(int argc, char const *argv[])
 
         #pragma omp master
         {
-            num_threads = omp_get_num_threads();
-            printf("This program is running in %d threads\n", num_threads);
             begin = omp_get_wtime();
+            num_threads = omp_get_num_threads();
             busy_workers = ( 1 << num_threads ) -1;
+            best_changes = new int[num_threads]; //DEBUG
+            paths_explored = new int[num_threads]; //DEBUG
+            pushes = new int[num_threads]; //DEBUG
             for(int i = 0; i < num_threads; i++)//DEBUG
             {//DEBUG
                 best_changes[i] = paths_explored[i] = pushes[i] = 0;//DEBUG
@@ -188,23 +192,28 @@ int main(int argc, char const *argv[])
         #pragma omp master
         {
             end = omp_get_wtime();
-            print_path(best_path);
-            double check_cost = 0.0;
-            for(int i = 0 ; i < C-1 ; i++)
-            {
-                check_cost += distances[best_path.order[i]][best_path.order[i+1]];
-            }
-            printf("%lf\n",check_cost );
-            printf("\nTIME : %lf seconds\n", end - begin);
+            char buffer[80];
 
-            printf("Proc Changes      Paths    Pushes\n");//DEBUG
-            for(int i = 0; i < num_threads; i++)//DEBUG
-            {//DEBUG
-                printf("   %d     %03d   %8d    %03d\n",i,best_changes[i],paths_explored[i],pushes[i]);//DEBUG
-            }//DEBUG
+            FILE *f = fopen("Results.txt", "a");
+            if(f != NULL)
+            {
+                fprintf(f, "%s\n", gettime(buffer));
+                fprintf(f,"%d classrooms\n",C);
+                fprintf(f,"%d threads\n",num_threads);
+                fprint_path(f,best_path);
+                fprintf(f,"Proc Changes      Paths    Pushes\n");//DEBUG
+                for(int i = 0; i < num_threads; i++)//DEBUG
+                {//DEBUG
+                    fprintf(f,"  %02d     %03d   %8d    %03d\n",i,best_changes[i],paths_explored[i],pushes[i]);//DEBUG
+                }//DEBUG
+                fprintf(f,"Time : %f seconds\n", end-begin);
+                fprintf(f,"\n=====================\n");
+            }
         }
     }
-    
+    delete[] best_changes; //DEBUG
+    delete[] paths_explored; //DEBUG
+    delete[] pushes; //DEBUG
     // print_matrix(distances);
     return 0;
 
@@ -272,5 +281,28 @@ void print_path(Path path)
         printf("%d, ", path.order[i]);
     }
     printf("\b\b : %lf\n",path.cost);
+}
+
+void fprint_path(FILE *f,Path path)
+{
+    for(int i = 0 ; i < path.order.size() ; i++)
+    {
+        fprintf(f,"%d, ", path.order[i]);
+    }
+    fprintf(f," : %lf\n",path.cost);
+}
+
+char* gettime(char* buffer)
+{
+    time_t rawtime;
+    struct tm * timeinfo;
+    
+    time (&rawtime);
+    timeinfo = localtime(&rawtime);
+
+    strftime(buffer,80,"%Y-%m-%d %I:%M:%S",timeinfo);
+    std::string str(buffer);
+
+    return buffer;
 }
 

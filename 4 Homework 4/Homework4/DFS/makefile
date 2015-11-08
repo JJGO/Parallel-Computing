@@ -3,25 +3,23 @@
  #####################################################################
  
 SRC = fsp_DFS
-CC = g++-5.2.0
-# ARGS = 10
-
-# HEADERS = ${SRC}.h
-OBJECTS = ${SRC}.o
+CC = g++
+FILES = ${SRC}.cpp
 
 default: ${SRC}
-# %.o: %.c $(HEADERS)
-%.o: %.cpp
-	${CC} -c $< -o $@ -fopenmp
 
-${SRC}: $(OBJECTS)
-	${CC} $(OBJECTS) -o3 -o $@ -fopenmp
+${SRC}: $(FILES)
+	${CC} $(FILES) -o3 -o ${SRC} -fopenmp
 
 clean:
-	-rm -f $(OBJECTS)
 	-rm -f ${SRC}
 
 run: ${SRC}
-	export OMP_NUM_THREADS=2
 	./${SRC}
-	# ./${SRC} ${ARGS}
+
+sub: $(SRC)
+	qsub p32.sh
+	qsub p16.sh
+	qsub p4.sh
+	qsub p1.sh
+	qsub p1.sh

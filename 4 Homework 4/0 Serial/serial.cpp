@@ -9,7 +9,7 @@
 #include <stack>
 #include <queue>
 
-#define C 15
+#define C 14
 
 // using namespace std;
 
@@ -32,6 +32,15 @@ void calculate_distances(Point coordinates[C], double distances[C][C]);
 void print_matrix(double A[C][C]);
 void print_path(Path path);
 
+struct ComparePaths // LessThan
+{
+    bool operator()(const Path &l, const Path &r) {
+        if(l.order.size() == r.order.size())
+            return l.cost > r.cost;
+        else
+            return l.order.size() < r.order.size();
+    }
+};
 
 int main(int argc, char const *argv[])
 {
@@ -39,6 +48,7 @@ int main(int argc, char const *argv[])
     double distances[C][C];
 
     std::stack<Path> unexplored_paths;
+    // std::priority_queue<Path,std::vector<Path>,ComparePaths> unexplored_paths;
 
     Path best_path;
     best_path.cost = std::numeric_limits<float>::infinity();
@@ -63,23 +73,26 @@ int main(int argc, char const *argv[])
     {
         current_path = unexplored_paths.top();
         unexplored_paths.pop();
-        for(int node = 1 ; node < C ; node++)
+        if(current_path.cost < best_path.cost)
         {
-            new_path = current_path;
-            if(!new_path.visited[node])
+            for(int node = 1 ; node < C ; node++)
             {
-                new_path.cost += distances[new_path.order.back()][node];
-                if(new_path.cost < best_path.cost)
+                new_path = current_path;
+                if(!new_path.visited[node])
                 {
-                    new_path.visited[node] = true;
-                    new_path.order.push_back(node);
-                    if(new_path.order.size() < C)
+                    new_path.cost += distances[new_path.order.back()][node];
+                    if(new_path.cost < best_path.cost)
                     {
-                        unexplored_paths.push(new_path);
-                    }
-                    else
-                    {
-                        best_path = new_path;
+                        new_path.visited[node] = true;
+                        new_path.order.push_back(node);
+                        if(new_path.order.size() < C)
+                        {
+                            unexplored_paths.push(new_path);
+                        }
+                        else
+                        {
+                            best_path = new_path;
+                        }
                     }
                 }
             }
@@ -112,6 +125,9 @@ void initialize_coordinates(Point coordinates[C])
     {
         coordinates[c].x = 100.0*sin(c);
         coordinates[c].y = 101.0*cos(c*c);
+        // coordinates[c].x = 1.1*(c*c % 17);
+        // coordinates[c].y = 0.5*(c*c*c % 23);
+
     }
 }
 

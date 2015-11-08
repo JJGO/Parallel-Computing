@@ -84,9 +84,8 @@ int main(int argc, char const *argv[])
             
             global_unexplored_paths.push(origin);
             
-            bool updated_best = false;
         // master_BFS_search
-            while(!updated_best)//( global_unexplored_paths.size() < num_threads )
+            while( global_unexplored_paths.size() < num_threads )
             {
                 current_path = global_unexplored_paths.top();//front();
                 global_unexplored_paths.pop();
@@ -107,9 +106,9 @@ int main(int argc, char const *argv[])
                             else
                             {
                                 best_path = new_path;
-                                updated_best = true;
                             }
                         }
+                        // print_path(new_path);
                     }
                 }
             }
@@ -121,7 +120,7 @@ int main(int argc, char const *argv[])
         long busy_mask = 0x1 << omp_get_thread_num();
         long idle_mask = busy_workers ^ busy_mask;
 
-        int best_changes = 0, paths_explored = 0, pushes = 0; //DEBUG
+        // int best_changes = 0, paths_explored = 0, pushes = 0; //DEBUG
 
     // worker_DFS_Search
         while(busy_workers > 0)
@@ -148,7 +147,7 @@ int main(int argc, char const *argv[])
                     new_path = current_path;
                     if(!new_path.visited[node])
                     {
-                        paths_explored++;//DEBUG
+                        // paths_explored++;//DEBUG
                         new_path.cost += distances[new_path.order.back()][node];
                         new_path.visited[node] = true;
                         new_path.order.push_back(node);
@@ -163,7 +162,7 @@ int main(int argc, char const *argv[])
                                     {
                                         global_unexplored_paths.push(new_path);
                                     }
-                                    pushes++; //DEBUG
+                                    // pushes++; //DEBUG
                                 }
                                 else
                                     unexplored_paths.push(new_path);
@@ -175,9 +174,9 @@ int main(int argc, char const *argv[])
                                     if(new_path.cost < best_path.cost)
                                     {
                                        best_path = new_path;
-                                       best_changes++;//DEBUG
-                                       printf("%d %d : ",omp_get_thread_num(),paths_explored ); //DEBUG
-                                       print_path(new_path); //DEBUG
+                                       // best_changes++;//DEBUG
+                                       // printf("%d %d : ",omp_get_thread_num(),paths_explored ); //DEBUG
+                                       // print_path(new_path); //DEBUG
                                     }
                                 }
                             }
@@ -189,16 +188,16 @@ int main(int argc, char const *argv[])
             busy_workers &= idle_mask;
         }
     
-        #pragma omp master//DEBUG
-        {//DEBUG
-            printf("Proc Changes      Paths    Pushes\n");//DEBUG
-        }//DEBUG
-        #pragma omp barrier//DEBUG
-        #pragma omp critical(print)//DEBUG
-        {//DEBUG
-            printf("   %d     %03d   %8d    %03d\n",omp_get_thread_num(),best_changes,paths_explored,pushes);//DEBUG
-        }//DEBUG
-        #pragma omp barrier//DEBUG
+        // #pragma omp master//DEBUG
+        // {//DEBUG
+            // printf("Proc Changes      Paths    Pushes\n");//DEBUG
+        // }//DEBUG
+        // #pragma omp barrier//DEBUG
+        // #pragma omp critical(print)//DEBUG
+        // {//DEBUG
+            // printf("   %d     %03d   %8d    %03d\n",omp_get_thread_num(),best_changes,paths_explored,pushes);//DEBUG
+        // }//DEBUG
+        // #pragma omp barrier//DEBUG
     // master output
         #pragma omp master
         {

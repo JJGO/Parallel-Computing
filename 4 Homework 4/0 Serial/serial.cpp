@@ -26,20 +26,6 @@ struct Path
     double cost;
 } ;
 
-// struct ComparePaths
-// {
-//     bool operator()(const Path &l, const Path &r) {return l.cost/l.order.size() > r.cost/r.order.size();}
-// };
-
-struct ComparePaths // LessThan
-{
-    bool operator()(const Path &l, const Path &r) {
-        if(l.order.size() == r.order.size())
-            return l.cost > r.cost;
-        else
-            return l.order.size() < r.order.size();
-    }
-};
 
 void initialize_coordinates(Point coordinates[C]);
 void calculate_distances(Point coordinates[C], double distances[C][C]);
@@ -52,8 +38,7 @@ int main(int argc, char const *argv[])
     Point coordinates[C];
     double distances[C][C];
 
-    // std::stack<Path> unexplored_paths;
-    std::priority_queue<Path,std::vector<Path>,ComparePaths> unexplored_paths;
+    std::stack<Path> unexplored_paths;
 
     Path best_path;
     best_path.cost = std::numeric_limits<float>::infinity();
@@ -95,7 +80,6 @@ int main(int argc, char const *argv[])
                     else
                     {
                         best_path = new_path;
-                        // print_path(new_path);
                     }
                 }
             }

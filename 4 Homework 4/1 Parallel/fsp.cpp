@@ -85,6 +85,7 @@ int main(int argc, char const *argv[])
             
             
         // master_BFS_search
+            printf("%d\n",num_threads*num_threads );
             while( global_unexplored_paths.size() < C*(C-1)*(C-2) )
             {
                 current_path = global_unexplored_paths.front();

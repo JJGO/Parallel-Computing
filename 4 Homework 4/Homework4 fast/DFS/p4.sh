@@ -8,7 +8,10 @@
 #PBS -q batch
 cd $HOME/Homework4/DFS
 #run my executable
-setenv OMP_NUM_THREADS 1
+setenv OMP_NUM_THREADS 4
+./fsp_DFS
+./fsp_DFS
+./fsp_DFS
 ./fsp_DFS
 ./fsp_DFS
 ./fsp_DFS

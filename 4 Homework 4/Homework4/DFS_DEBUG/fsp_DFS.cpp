@@ -55,9 +55,9 @@ int main(int argc, char const *argv[])
     long busy_workers;
     int num_threads;
 
-    // int* best_changes; //DEBUG
-    // int* paths_explored; //DEBUG
-    // int* pushes; //DEBUG
+    int* best_changes; //DEBUG
+    int* paths_explored; //DEBUG
+    int* pushes; //DEBUG
 
     #pragma omp parallel shared(best_path, global_unexplored_paths,coordinates,distances,busy_workers,num_threads)
     {
@@ -69,13 +69,13 @@ int main(int argc, char const *argv[])
             begin = omp_get_wtime();
             num_threads = omp_get_num_threads();
             busy_workers = ( 1 << num_threads ) -1;
-            // best_changes = new int[num_threads]; //DEBUG
-            // paths_explored = new int[num_threads]; //DEBUG
-            // pushes = new int[num_threads]; //DEBUG
-            // for(int i = 0; i < num_threads; i++)//DEBUG
-            // {//DEBUG
-                // best_changes[i] = paths_explored[i] = pushes[i] = 0;//DEBUG
-            // }//DEBUG
+            best_changes = new int[num_threads]; //DEBUG
+            paths_explored = new int[num_threads]; //DEBUG
+            pushes = new int[num_threads]; //DEBUG
+            for(int i = 0; i < num_threads; i++)//DEBUG
+            {//DEBUG
+                best_changes[i] = paths_explored[i] = pushes[i] = 0;//DEBUG
+            }//DEBUG
         }
         
     // INIT VARS
@@ -165,7 +165,7 @@ int main(int argc, char const *argv[])
                         new_path = current_path;
                         if(!new_path.visited[node])
                         {
-                            // paths_explored[thread_num]++;//DEBUG
+                            paths_explored[thread_num]++;//DEBUG
                             new_path.cost += distances[new_path.order.back()][node];
                             new_path.visited[node] = true;
                             new_path.order.push_back(node);
@@ -179,7 +179,7 @@ int main(int argc, char const *argv[])
                                         {
                                             global_unexplored_paths.push(new_path);
                                         }
-                                        // pushes[thread_num]++; //DEBUG
+                                        pushes[thread_num]++; //DEBUG
                                     }
                                     else
                                         unexplored_paths.push(new_path);
@@ -191,7 +191,7 @@ int main(int argc, char const *argv[])
                                         if(new_path.cost < best_path.cost)
                                         {
                                            best_path = new_path;
-                                           // best_changes[thread_num]++;//DEBUG
+                                           best_changes[thread_num]++;//DEBUG
                                         }
                                     }
                                 }
@@ -217,19 +217,19 @@ int main(int argc, char const *argv[])
                 fprintf(f,"%d classrooms\n",C);
                 fprintf(f,"%d threads\n",num_threads);
                 fprint_path(f,best_path);
-                // fprintf(f,"Proc Changes      Paths    Pushes\n");//DEBUG
-                // for(int i = 0; i < num_threads; i++)//DEBUG
-                // {//DEBUG
-                    // fprintf(f,"  %02d     %03d   %8d    %03d\n",i,best_changes[i],paths_explored[i],pushes[i]);//DEBUG
-                // }//DEBUG
+                fprintf(f,"Proc Changes      Paths    Pushes\n");//DEBUG
+                for(int i = 0; i < num_threads; i++)//DEBUG
+                {//DEBUG
+                    fprintf(f,"  %02d     %03d   %8d    %03d\n",i,best_changes[i],paths_explored[i],pushes[i]);//DEBUG
+                }//DEBUG
                 fprintf(f,"Time : %f seconds\n", end-begin);
                 fprintf(f,"\n=====================\n");
             }
         }
     }
-    // delete[] best_changes; //DEBUG
-    // delete[] paths_explored; //DEBUG
-    // delete[] pushes; //DEBUG
+    delete[] best_changes; //DEBUG
+    delete[] paths_explored; //DEBUG
+    delete[] pushes; //DEBUG
     // print_matrix(distances);
     return 0;
 

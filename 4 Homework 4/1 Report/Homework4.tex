@@ -1,0 +1,129 @@
+\documentclass[a4paper]{article}
+\input{plantilla.tex}
+
+% Global variables
+\newcommand{\tu}           {\underline}
+\newcommand{\HWTitle}           {Homework 4}
+\newcommand{\HWSubtitle}        {}
+\newcommand{\HWDueDate}         {\today}
+\newcommand{\HWClass}           {EECS 587 Parallel Computing}
+\newcommand{\HWAuthorName}     {José Javier González Ortiz}
+
+\title{\HWTitle \\ \vspace{.25cm} \large\HWSubtitle}
+\author{\HWAuthorName}
+\date{\HWDueDate}
+
+\setlength{\parskip}{.5em}
+
+\renewcommand\algorithmiccomment[1]{%
+  \hfill\ \eqparbox{COMMENT}{#1}%
+}
+
+% \DeclarePairedDelimiter\par{\left(}{\right)}
+
+\newcommand\LONGCOMMENT[1]{%
+  \hfill\ \begin{minipage}[t]{\eqboxwidth{COMMENT}}#1\strut\end{minipage}%
+}
+
+\begin{document}
+\maketitle
+\thispagestyle{fancy}
+
+\section{Algorithm}
+    Given the problem the algorithm for the serial version was quite straightforward. Using \emph{Depth First Search} via a stack data structure we just compute the paths and update a global bound which the best path that allows us to prune subtrees when they are bigger than the bound.
+
+    In order to parallelize this problem in a Manager-Worker fashion we can define a clear approach. First all the threads, help create the lookup table for the distances and once they are done, they wait for the Manager to create some initial work and after the work is created they all act as workers in DFS searchs with a common bound. From this point on the manager task is a shared role. Using a shared variable with bits for each processor we can track if any of the processors is idle and put a task in the global queue for them to fetch.
+
+    This way we the manager work is distributed among the processors and we can maximize computing power.
+
+    We have only to determine the way the initial jobs are going to be created. We established to approaches, BFS until there is a significant amount of initial work per thread or DFS until a bound is found.
+
+\section{Analysis}
+    The analysis for this problem is not trivial since we can explore multiple paths at once and find best bounds in parallel, we can significantly speedup the algorithm. However, even if we had the best bound from the start there is a pruning job that will happen as in serial. Namely, that if we have to explore 100 nodes to discard them, adding $p$ processors will only allow us to get a SpeedUp of $p$. What it is more, since the exploration and pruning won't be self balanced, the processors will have to spend time sending and receiving tasks to keep the work balanced.
+
+    Therefore we should a expect an overhead created by the task handling. At the same time, since the shared bound may need to be changed this could also involve some extra overhead. Being a shared variable the changed has to be done in mutual exclusion or otherwise we may incur into correctness issues.
+
+\section{Implementation}
+    To implement the algorithm we have used the partition described above and used a cylindrical virtual topology where the row processors are wrapped around but the column processors are not. Furthermore it has been used \texttt{MPI\_SENDRECV} for the communication, using a derived datatype for the column communication.
+
+    The particular aspects of the whole implementation can be seen in Code \ref{cod:matrix}
+
+\section{Results}
+    The results from the timings are shown in the Table \ref{tab:Results}. The Verification values for the different matrix sizes are shown in the Table \ref{tab:Verification}.
+
+    \begin{table}[!htp]
+      \center
+      \begin{tabular}{*{5}{r}}
+        \textbf{n} &  \textbf{p} &   \textbf{average} &       \textbf{min} &       \textbf{max} \\
+    \midrule
+     1000 & 1 & 5.71552 & 5.34630 & 5.83059\\
+     2000 & 1 & 22.82041 & 21.18143 & 23.31813\\
+     1000 & 4 & 1.46049 & 1.41766 & 1.49389\\
+     2000 & 4 & 6.04183 & 5.67908 & 7.35377\\
+     1000 & 16 & 0.46770 & 0.38920 & 0.54539\\
+     2000 & 16 & 1.77513 & 1.50135 & 2.04136\\
+     1000 & 36 & 0.30457 & 0.22946 & 0.37673\\
+     2000 & 36 & 1.01406 & 0.68300 & 1.30123\\
+      \end{tabular}
+      \caption{Results in seconds}
+      \label{tab:Results}
+    \end{table}
+        
+    \begin{table}[!htp]
+      \center
+      \begin{tabular}{*{3}{r}}
+        \textbf{n} &   \textbf{sum} &       \textbf{min}\\
+    \midrule
+     1000 &  4283810.871966  & -892.718330   \\
+     2000 & 17631642.148465  & -1800.724437  \\
+      \end{tabular}
+      \caption{Verification Values}
+      \label{tab:Verification}
+    \end{table}
+
+    To ease the understanding of the data we can plot different relations between the data. In figures \ref{fig:1000} and \ref{fig:2000} we can see the timing results in a log scale for $n = 1000$ and $n = 2000$. Defining $\text{SerTime}(n) = \text{ParTime}(n,1)$ and calculating the ideal parallel time as $\text{SerTime}/p$ we get some interesting results. As we can see the curves match up quite nicely, being the minimum time better than the average one, which seems logical. The deviation for greater $p$ seems larger, however we are using a log scale so in fact it is not as big of a difference. Finally, we can see that for $n = 2000$ the minimum case does better $n = 1000$.
+
+    \begin{figure}[htp!]
+      \centering
+      \begin{subfigure}{.5\textwidth}
+        \centering
+        % \includegraphics[width=.99\textwidth]{../2 Analysis/1000.png}
+        \caption{$n = 1000$}
+        \label{fig:1000}
+      \end{subfigure}%
+      \begin{subfigure}{.5\textwidth}
+        \centering
+        % \includegraphics[width=.99\textwidth]{../2 Analysis/2000.png}
+        \caption{$n = 2000$}
+        \label{fig:2000}
+      \end{subfigure}
+      \caption{Logarithmic plot of times for different number of processors}
+    \end{figure}
+
+    Now, to analyze both SpeedUp and Efficiency, we can see the plots shown in Figures \ref{fig:SpeedUp} and \ref{fig:Efficiency}, in which we can find the ideal case, for $n = 1000$ and for $n = 2000$. In this plots an average of the minimum cases has been used to avoid deviating the data with longer timings.
+
+    Analyzing the Figures we can see that we have achieved almost linear SpeedUp as the Equation \eqref{eq:SpeedUp} predicted. As $n$ goes from $1000$ to $2000$ the SpeedUp improves verifying our predictions. For the Efficiency, Equation \eqref{eq:Efficiency} predicted constant efficiency as $n$ grew larger. Figure \ref{fig:Efficiency} confirms this, with $n = 2000$ having a behavior much closer to ideal efficiency than $n = 1000$.
+
+    Finally, it is important to notice that MPI communication does not behave as the theoretical models and therefore the results will not match perfectly to the model. Nevertheless, we have achieved successful results in the time needed to solve the problem.
+
+
+    \begin{figure}[htp!]
+      \centering
+      \begin{subfigure}{.5\textwidth}
+        \centering
+        % \includegraphics[width=.99\textwidth]{../2 Analysis/SpeedUp.png}
+        \caption{Speed-Up}
+        \label{fig:SpeedUp}
+      \end{subfigure}%
+      \begin{subfigure}{.5\textwidth}
+        \centering
+        % \includegraphics[width=.99\textwidth]{../2 Analysis/Efficiency.png}
+        \caption{Efficiency}
+        \label{fig:Efficiency}
+      \end{subfigure}
+      \caption{Speed-Up and Efficiency plots for the ideal case, $n=1000$ and $n = 2000$}
+    \end{figure}
+
+
+
+\end{document}

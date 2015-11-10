@@ -1,5 +1,5 @@
 #!/bin/csh
-#PBS -l nodes=1:ppn=15
+#PBS -l nodes=1:ppn=30
 #  nodes must be 1, will fail if it is not
 #  ppn must be a multiple of 15, because Greenfield processors each contain 15 cores
 #PBS -l walltime=5:00
@@ -8,7 +8,10 @@
 #PBS -q batch
 cd $HOME/Homework4/DFS
 #run my executable
-setenv OMP_NUM_THREADS 1
+setenv OMP_NUM_THREADS 16
+./fsp_DFS
+./fsp_DFS
+./fsp_DFS
 ./fsp_DFS
 ./fsp_DFS
 ./fsp_DFS

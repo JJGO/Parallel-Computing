@@ -6,9 +6,12 @@
 #  Combine standard output and error into one file
 #PBS -j oe
 #PBS -q batch
-cd $HOME/Homework4/DFS
+cd $HOME/Homework4/BFS
 #run my executable
-setenv OMP_NUM_THREADS 1
-./fsp_DFS
-./fsp_DFS
-./fsp_DFS
+setenv OMP_NUM_THREADS 4
+./fsp_BFS
+./fsp_BFS
+./fsp_BFS
+./fsp_BFS
+./fsp_BFS
+./fsp_BFS

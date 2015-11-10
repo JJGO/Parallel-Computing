@@ -53,7 +53,7 @@ for mode in modes:
             # pushes[p].append(pu)
             time = f.readline().split()[-2]
             assert best_costs[n] == cost and best_paths[n] == path
-            times[p].append(float(time)/3.0)
+            times[p].append(float(time))
             f.readline()
             f.readline()
 
@@ -71,8 +71,17 @@ for mode in modes:
         print "{0} & {1} - {2:.5f} {3:.5f} {4:.5f}".format(n,p,av,min(time),max(time))
         # " ".join(map(str,time))
 
-    for k in sorted(times):
-        print k,len(times[k])
+    # paths_per_thread = {}
+    # total_paths = {}
+    # for proc in ps:
+    #     x = [sum(p) for p in paths[proc]]
+    #     total_paths[proc] = sum(x)/len(x)
+    #     y = [sum(p)*1.0/len(p) for p in paths[proc]]
+    #     paths_per_thread[proc] = sum(y)/len(y)
+    #     print "{0} - {1:09.1f} {2:09.1f} {3:7d}".format(proc, paths_per_thread[proc], total_paths[proc]*1.0/proc, total_paths[proc])
+
+    # for k in sorted(times):
+    #     print k,len(times[k])
 
     ideals = map(lambda x: avs[ps[0]]/x,ps)
 
@@ -83,7 +92,7 @@ for mode in modes:
     ppl.plot(ps,[mins[p] for p in ps], 'bo-')
     pyplot.xlabel('Processors')
     pyplot.ylabel('Time (s)')
-    pyplot.title('Running Times for C = '+str(n))
+    pyplot.title('Running Times for n = '+str(n))
     pyplot.legend(['Ideal Case','Average Case','Best Case'])
     pyplot.yscale('log')
     pyplot.savefig(str(n)+'_'+mode+'.png')
@@ -91,7 +100,7 @@ for mode in modes:
 
     SpeedUp = { p : avs[1]/avs[p] for p in ps }
     Efficiency = { p : SpeedUp[p]/p for p in ps }
-    # for C in ns:
+    # for n in ns:
     fig = pyplot.figure()
     ppl.plot(ps,ps, 'go-')
     ppl.plot(ps,[SpeedUp[p] for p in ps], 'ro-')

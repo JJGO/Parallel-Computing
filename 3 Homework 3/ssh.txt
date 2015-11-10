@@ -1,0 +1,6 @@
+scp -r Homework3 jjgo@login-course.engin.umich.edu:/home/jjgo/Documents
+
+ssh -l jjgo login-course.engin.umich.edu
+scp -r Homework3 flux-login.engin.umich.edu:/home/jjgo/Documents
+
+ssh -l jjgo flux-login.engin.umich.edu

@@ -2,7 +2,7 @@
  # Example MPI C Makefile.
  #####################################################################
  
-SRC = serial
+SRC = serial_fast
 CC = g++
 # ARGS = 10
 

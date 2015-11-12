@@ -2,6 +2,8 @@ scp -r Homework4 jgonzal7@greenfield.psc.xsede.org:/home/jgonzal7
 
 ssh jgonzal7@greenfield.psc.xsede.org
 
+ssh jjgo@login.xsede.org
+
 scp -r Homework4 jgonzal7@greenfield.psc.xsede.org:/home/jgonzal7
 
 scp -r Homework4 jjgo@login.xsede.org:/home/jjgo

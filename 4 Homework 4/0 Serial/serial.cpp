@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 // #include <iostream>
-#include <time.h>
+#include <ctime>
 #include <limits>
 #include <cmath>
 #include <vector>
@@ -21,8 +21,7 @@ struct Point {
 
 struct Path
 {
-    int order[C];
-    int size;
+    std::vector<int> order;
     bool visited[C];
     double cost;
 } ;
@@ -36,10 +35,10 @@ void print_path(Path path);
 struct ComparePaths // LessThan
 {
     bool operator()(const Path &l, const Path &r) {
-        if(l.size == r.size)
+        if(l.order.size() == r.order.size())
             return l.cost > r.cost;
         else
-            return l.size < r.size;
+            return l.order.size() < r.order.size();
     }
 };
 
@@ -54,19 +53,17 @@ int main(int argc, char const *argv[])
     Path best_path;
     best_path.cost = std::numeric_limits<float>::infinity();
 
+    Path origin, current_path, new_path;
+    origin.cost = 0.0;
+    origin.order.push_back(0);
+    for(int i = 0; i < C; i++)
+        origin.visited[i] = false;
+
     clock_t begin, end;
     double time_spent;
 
     begin = clock();
 
-    Path origin, current_path, new_path;
-    origin.cost = 0.0;
-    origin.size = 1;
-    origin.order[0] = 0;
-    for(int i = 0; i < C; i++)
-        origin.visited[i] = false;
-
-    
     initialize_coordinates(coordinates);
     calculate_distances(coordinates,distances);
 
@@ -80,16 +77,15 @@ int main(int argc, char const *argv[])
         {
             for(int node = 1 ; node < C ; node++)
             {
-                new_path = current_path;
-                if(!new_path.visited[node])
+                if(!current_path.visited[node])
                 {
-                    new_path.cost += distances[new_path.order[new_path.size-1]][node];
+                    new_path = current_path;
+                    new_path.cost += distances[new_path.order.back()][node];
                     if(new_path.cost < best_path.cost)
                     {
                         new_path.visited[node] = true;
-                        new_path.order[new_path.size] = node;
-                        new_path.size += 1;
-                        if(new_path.size < C)
+                        new_path.order.push_back(node);
+                        if(new_path.order.size() < C)
                         {
                             unexplored_paths.push(new_path);
                         }
@@ -169,7 +165,7 @@ void print_matrix(double A[C][C])
 
 void print_path(Path path)
 {
-    for(int i = 0 ; i < path.size; i++)
+    for(int i = 0 ; i < path.order.size() ; i++)
     {
         printf("%d, ", path.order[i]);
     }

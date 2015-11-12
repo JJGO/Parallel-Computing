@@ -9,9 +9,9 @@
 cd $HOME/Homework4/BFS
 #run my executable
 setenv OMP_NUM_THREADS 4
-./fsp_BFS
-./fsp_BFS
-./fsp_BFS
-./fsp_BFS
-./fsp_BFS
-./fsp_BFS
+./fsp
+./fsp
+./fsp
+./fsp
+./fsp
+./fsp

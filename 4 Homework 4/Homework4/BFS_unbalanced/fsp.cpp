@@ -1,3 +1,8 @@
+// Jose Javier Gonzalez
+// University of Michigan
+// EECS 587
+
+// Homework 4
 #include <stdio.h>
 #include <stdlib.h>
 // #include <iostream>

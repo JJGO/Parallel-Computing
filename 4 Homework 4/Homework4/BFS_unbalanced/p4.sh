@@ -6,7 +6,7 @@
 #  Combine standard output and error into one file
 #PBS -j oe
 #PBS -q batch
-cd $HOME/Homework4/BFS_unfair
+cd $HOME/Homework4/BFS_unbalanced
 #run my executable
 setenv OMP_NUM_THREADS 4
 ./fsp

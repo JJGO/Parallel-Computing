@@ -7,7 +7,7 @@ Homework 4
 All the code used is in the respective files fsp.cpp.
 There are three versions of the program:
 	-BFS : regular implementation with load balancing
-	-BFS_unfair : like BFS but ignoring all load balancing to compare the benefits of load balancing the problem
+	-BFS_unbalanced : like BFS but ignoring all load balancing to compare the benefits of load balancing the problem
 
 Since C++ primitives are used the compiler must be g++
 
